@@ -1,0 +1,80 @@
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref 'ServiceName'
+      Cpu: !Ref 'ContainerCpu'
+      Memory: !Ref 'ContainerMemory'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn:
+        Fn::ImportValue:
+          !Join [':', [!Ref 'StackName', 'ECSTaskExecutionRole']]
+      TaskRoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/${Role}
+      ContainerDefinitions:
+        - Name: !Ref 'ServiceName'
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECSRepository}:${ECSTag}
+          Environment:
+            - Name: DD_LOGS_ENABLED
+              Value: true
+            - Name: DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL
+              Value: true
+            - Name: DD_LOGS_INJECTION
+              Value: true
+            - Name: DD_SERVICE
+              Value: !Ref 'ServiceName'
+            - Name: DD_ENV
+              Value: !FindInMap [ ArchBaseMap, !Ref StackName, Env ]
+            - Name: DD_AGENT_HOST
+              Value: '127.0.0.1'
+          PortMappings:
+            - ContainerPort: !Ref 'ContainerPort'
+          User: 0
+          LogConfiguration:
+            LogDriver: awsfirelens
+        - Name: datadog-agent
+          Image: 'public.ecr.aws/datadog/agent:latest'
+          Environment:
+            - Name: ECS_FARGATE
+              Value: true
+            - Name: DD_APM_ENABLED
+              Value: true
+            - Name: DD_SITE
+              Value: datadoghq.com
+            - Name: DD_APM_NON_LOCAL_TRAFFIC
+              Value: true
+            - Name: DD_DOGSTATSD_NON_LOCAL_TRAFFIC
+              Value: true
+            - Name: DD_SERVICE
+              Value: !Ref 'ServiceName'
+            - Name: DD_ENV
+              Value: !FindInMap [ ArchBaseMap, !Ref StackName, Env ]
+          PortMappings:
+            - ContainerPort: 8126
+              HostPort: 8126
+              Protocol: tcp
+            - ContainerPort: 8125
+              HostPort: 8125
+              Protocol: udp
+        - Name: log-router
+          Image: '235997980558.dkr.ecr.us-east-1.amazonaws.com/fluentbit-test:1'
+          User: 0
+          FirelensConfiguration:
+            Type: fluentbit
+            Options:
+              enable-ecs-log-metadata: true
+              config-file-type: 'file'
+              config-file-value: '/extra.conf'
+          Environment:
+            - Name: CLOUDWATCH_REGION_NAME
+              Value: !Ref AWS::Region
+            - Name: CLOUDWATCH_LOG_GROUP_NAME
+              Value: !Ref AWS::StackName
+            - Name: DD_SITE
+              Value: datadoghq.com
+            - Name: DD_API_KEY
+              Value: jkjkjkjkjk
+            - Name: DD_SERVICE
+              Value: !Ref 'ServiceName'
+            - Name: DD_SOURCE
+              Value: python

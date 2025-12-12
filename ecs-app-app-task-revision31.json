@@ -1,0 +1,262 @@
+{
+    "compatibilities": [
+        "EC2",
+        "MANAGED_INSTANCES",
+        "FARGATE"
+    ],
+    "containerDefinitions": [
+        {
+            "cpu": 256,
+            "dependsOn": [
+                {
+                    "condition": "HEALTHY",
+                    "containerName": "datadog-agent"
+                }
+            ],
+            "environment": [
+                {
+                    "name": "DD_SERVICE",
+                    "value": "ecs-demo-app"
+                },
+                {
+                    "name": "DD_LOGS_INJECTION",
+                    "value": "true"
+                },
+                {
+                    "name": "DD_ENV",
+                    "value": "development"
+                },
+                {
+                    "name": "DD_AGENT_HOST",
+                    "value": "127.0.0.1"
+                }
+            ],
+            "essential": true,
+            "image": "123456789098.dkr.ecr.us-west-2.amazonaws.com/apm/only-app-to-test@sha256:57a96bb92dc4f655660cb0393010c6ddddf5a60c6844cbe5f6db75589bd45545",
+            "logConfiguration": {
+                "logDriver": "awsfirelens",
+                "options": {
+                    "dd_service": "ecs-demo-app",
+                    "TLS": "on",
+                    "dd_tags": "env:development",
+                    "provider": "ecs",
+                    "Name": "datadog"
+                },
+                "secretOptions": [
+                    {
+                        "name": "apikey",
+                        "valueFrom": "arn:aws:secretsmanager:us-west-2:123456789098:secret:ecs-demo/datadog-api-key-10dFe3E"
+                    }
+                ]
+            },
+            "memory": 512,
+            "mountPoints": [],
+            "name": "app",
+            "portMappings": [
+                {
+                    "containerPort": 8080,
+                    "hostPort": 8080,
+                    "name": "app-8080-tcp",
+                    "protocol": "tcp"
+                }
+            ],
+            "systemControls": [],
+            "volumesFrom": []
+        },
+        {
+            "cpu": 256,
+            "environment": [
+                {
+                    "name": "DD_APM_NON_LOCAL_TRAFFIC",
+                    "value": "true"
+                },
+                {
+                    "name": "DD_SITE",
+                    "value": "datadoghq.com"
+                },
+                {
+                    "name": "DD_SERVICE",
+                    "value": "ecs-demo-app"
+                },
+                {
+                    "name": "ECS_FARGATE",
+                    "value": "true"
+                },
+                {
+                    "name": "DD_APM_ENABLED",
+                    "value": "true"
+                },
+                {
+                    "name": "DD_ENV",
+                    "value": "development"
+                },
+                {
+                    "name": "DD_LOGS_ENABLED",
+                    "value": "true"
+                },
+                {
+                    "name": "DD_DOGSTATSD_NON_LOCAL_TRAFFIC",
+                    "value": "true"
+                }
+            ],
+            "essential": true,
+            "healthCheck": {
+                "command": [
+                    "agent",
+                    "health"
+                ],
+                "interval": 30,
+                "retries": 3,
+                "startPeriod": 15,
+                "timeout": 5
+            },
+            "image": "public.ecr.aws/datadog/agent:latest",
+            "memory": 512,
+            "mountPoints": [],
+            "name": "datadog-agent",
+            "portMappings": [
+                {
+                    "containerPort": 8126,
+                    "hostPort": 8126,
+                    "name": "datadog-agent-8126-tcp",
+                    "protocol": "tcp"
+                }
+            ],
+            "secrets": [
+                {
+                    "name": "DD_API_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:us-west-2:123456789098:secret:ecs-demo/datadog-api-key-10dFe3E"
+                }
+            ],
+            "systemControls": [],
+            "volumesFrom": []
+        },
+        {
+            "cpu": 0,
+            "environment": [
+                {
+                    "name": "CLOUDWATCH_LOG_GROUP_NAME",
+                    "value": "/ecs/python-log-app"
+                },
+                {
+                    "name": "DD_SITE",
+                    "value": "datadoghq.com"
+                },
+                {
+                    "name": "CLOUDWATCH_REGION_NAME",
+                    "value": "us-west-2"
+                }
+            ],
+            "essential": true,
+            "firelensConfiguration": {
+                "options": {
+                    "config-file-type": "file",
+                    "config-file-value": "/extra.conf",
+                    "enable-ecs-log-metadata": "true"
+                },
+                "type": "fluentbit"
+            },
+            "image": "123456789098.dkr.ecr.us-west-2.amazonaws.com/datadog/logs@sha256:f0bf6b059538f01dfc36a10435554e74115c81f0bfda40bb7dd741961119f1c5",
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/python-log-app",
+                    "awslogs-create-group": "true",
+                    "awslogs-region": "us-west-2",
+                    "awslogs-stream-prefix": "ecs"
+                },
+                "secretOptions": []
+            },
+            "memoryReservation": 51,
+            "mountPoints": [],
+            "name": "log_router",
+            "portMappings": [],
+            "secrets": [
+                {
+                    "name": "DD_API_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:us-west-2:123456789098:secret:ecs-demo/datadog-api-key-10dFe3E"
+                }
+            ],
+            "systemControls": [],
+            "user": "0",
+            "volumesFrom": []
+        }
+    ],
+    "cpu": "512",
+    "executionRoleArn": "arn:aws:iam::123456789098:role/ecs-app-ecs-task-execution-role",
+    "family": "ecs-app-app-task",
+    "memory": "1024",
+    "networkMode": "awsvpc",
+    "placementConstraints": [],
+    "registeredAt": "2025-12-12T16:26:30.403Z",
+    "requiresAttributes": [
+        {
+            "name": "ecs.capability.execution-role-awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.ecr-auth"
+        },
+        {
+            "name": "ecs.capability.firelens.options.config.file"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.17"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.21"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.logging-driver.awsfirelens"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.task-iam-role"
+        },
+        {
+            "name": "ecs.capability.container-health-check"
+        },
+        {
+            "name": "ecs.capability.execution-role-ecr-pull"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        },
+        {
+            "name": "ecs.capability.task-eni"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+        },
+        {
+            "name": "ecs.capability.firelens.fluentbit"
+        },
+        {
+            "name": "ecs.capability.secrets.asm.environment-variables"
+        },
+        {
+            "name": "ecs.capability.container-ordering"
+        },
+        {
+            "name": "ecs.capability.secrets.asm.bootstrap.log-driver"
+        }
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "revision": 31,
+    "status": "ACTIVE",
+    "taskDefinitionArn": "arn:aws:ecs:us-west-2:123456789098:task-definition/ecs-app-app-task:31",
+    "taskRoleArn": "arn:aws:iam::123456789098:role/ecs-app-ecs-task-execution-role",
+    "volumes": [],
+    "tags": [
+        {
+            "key": "Name",
+            "value": "ecs-app-app-task"
+        }
+    ]
+}
