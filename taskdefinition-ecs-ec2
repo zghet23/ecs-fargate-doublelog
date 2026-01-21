@@ -1,0 +1,101 @@
+{
+    "taskDefinitionArn": "arn:aws:ecs:us-west-2:369042512949:task-definition/allqu-app-sg:1",
+    "containerDefinitions": [
+        {
+            "name": "datadog-agent",
+            "image": "public.ecr.aws/datadog/agent:latest",
+            "cpu": 100,
+            "memory": 512,
+            "links": [],
+            "portMappings": [],
+            "essential": true,
+            "entryPoint": [],
+            "command": [],
+            "environment": [
+                {
+                    "name": "DD_SITE",
+                    "value": "datadoghq.com"
+                }
+            ],
+            "environmentFiles": [],
+            "mountPoints": [
+                {
+                    "sourceVolume": "docker_sock",
+                    "containerPath": "/var/run/docker.sock"
+                },
+                {
+                    "sourceVolume": "cgroup",
+                    "containerPath": "/host/sys/fs/cgroup"
+                },
+                {
+                    "sourceVolume": "proc",
+                    "containerPath": "/host/proc"
+                }
+            ],
+            "volumesFrom": [],
+            "secrets": [
+                {
+                    "name": "DD_API_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:us-west-2:369042512949:secret:secret-manager-sg-yp89Qw"
+                }
+            ],
+            "dnsServers": [],
+            "dnsSearchDomains": [],
+            "extraHosts": [],
+            "dockerSecurityOptions": [],
+            "dockerLabels": {},
+            "ulimits": [],
+            "systemControls": [],
+            "credentialSpecs": []
+        }
+    ],
+    "family": "allqu-app-sg",
+    "executionRoleArn": "arn:aws:iam::369042512949:role/datadog-task-execution-role",
+    "networkMode": "bridge",
+    "revision": 1,
+    "volumes": [
+        {
+            "name": "proc",
+            "host": {
+                "sourcePath": "/proc/"
+            }
+        },
+        {
+            "name": "docker_sock",
+            "host": {
+                "sourcePath": "/var/run/docker.sock"
+            }
+        },
+        {
+            "name": "cgroup",
+            "host": {
+                "sourcePath": "/sys/fs/cgroup/"
+            }
+        }
+    ],
+    "status": "ACTIVE",
+    "requiresAttributes": [
+        {
+            "name": "ecs.capability.secrets.asm.environment-variables"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.17"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        }
+    ],
+    "placementConstraints": [],
+    "compatibilities": [
+        "EXTERNAL",
+        "EC2"
+    ],
+    "requiresCompatibilities": [
+        "EC2"
+    ],
+    "cpu": "256",
+    "memory": "512",
+    "registeredAt": "2025-11-26T20:57:16.726Z",
+    "registeredBy": "arn:aws:sts::369042512949:assumed-role/AWSReservedSSO_account-admin_932c81858812a5fa/samuel.garcia@datadoghq.com",
+    "tags": []
+}
